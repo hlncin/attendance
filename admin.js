@@ -1,50 +1,27 @@
-console.log("admin.js loaded");
+// admin.js
+import { db, getTodayKey } from "./firebase.js";
+import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBDmKX2EzmZQYtLhGWHPhrNiAbYMQpsEPI",
-  authDomain: "attendance-app-4cc52.firebaseapp.com",
-  projectId: "attendance-app-4cc52",
-  storageBucket: "attendance-app-4cc52.firebasestorage.app",
-  messagingSenderId: "862990205208",
-  appId: "1:862990205208:web:f6caa206cd05c86a8a9e6d"
-};
+async function loadTodayAttendance() {
+  const todayKey = getTodayKey();
+  const usersRef = collection(db, "attendance", todayKey, "users");
+  const snapshot = await getDocs(usersRef);
 
-if (!firebase.apps.length) {
-  firebase.initializeApp(firebaseConfig);
-}
-
-const db = firebase.firestore();
-const today = new Date().toISOString().split("T")[0];
-
-document.addEventListener("DOMContentLoaded", () => {
-  const table = document.getElementById("adminLogTable");
+  const table = document.getElementById("attendanceTable");
   table.innerHTML = "";
 
-  db.collection("attendance")
-    .where("date", "==", today)
-    .get()
-    .then(snapshot => {
-      if (snapshot.empty) {
-        table.innerHTML = `
-          <tr>
-            <td colspan="4">No attendance records today</td>
-          </tr>
-        `;
-        return;
-      }
+  if (snapshot.empty) {
+    table.innerHTML = "<tr><td colspan='3'>No attendance records today</td></tr>";
+    return;
+  }
 
-      snapshot.forEach(doc => {
-        const d = doc.data();
-        const row = `
-          <tr>
-            <td>${d.date}</td>
-            <td>${d.name}</td>
-            <td>${d.checkIn || "-"}</td>
-            <td>${d.checkOut || "-"}</td>
-          </tr>
-        `;
-        table.innerHTML += row;
-      });
-    });
-});
+  snapshot.forEach(doc => {
+    const d = doc.data();
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${d.name}</td><td>${d.checkedAt?.toDate().toLocaleTimeString() || "-"}</td><td>${d.checkOut || "-"}</td>`;
+    table.appendChild(tr);
+  });
+}
+
+loadTodayAttendance();
 

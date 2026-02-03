@@ -1,75 +1,43 @@
-console.log("NEW script.js loaded");
+// script.js
+import { db, getTodayKey } from "./firebase.js";
+import { doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBDmKX2EzmZQYtLhGWHPhrNiAbYMQpsEPI",
-  authDomain: "attendance-app-4cc52.firebaseapp.com",
-  projectId: "attendance-app-4cc52",
-  storageBucket: "attendance-app-4cc52.firebasestorage.app",
-  messagingSenderId: "862990205208",
-  appId: "1:862990205208:web:f6caa206cd05c86a8a9e6d"
+window.checkIn = async function() {
+  const name = document.getElementById("nameSelect").value;
+  if (!name) { alert("Please select your name."); return; }
+
+  const todayKey = getTodayKey();
+  const docRef = doc(db, "attendance", todayKey, "users", name);
+  const snapshot = await getDoc(docRef);
+
+  if (snapshot.exists()) {
+    alert("You have already checked in today.");
+    return;
+  }
+
+  await setDoc(docRef, {
+    name: name,
+    checkedAt: serverTimestamp(),
+    checkOut: "" // 초기값
+  });
+
+  alert("Check-in completed!");
 };
 
-if (!firebase.apps.length) {
-  firebase.initializeApp(firebaseConfig);
-}
-
-const db = firebase.firestore();
-const today = new Date().toISOString().split("T")[0];
-
-// ✅ 출근 (하루 1번 제한)
-function checkIn() {
+window.checkOut = async function() {
   const name = document.getElementById("nameSelect").value;
-  if (!name) {
-    alert("Please select a name");
+  if (!name) { alert("Please select your name."); return; }
+
+  const todayKey = getTodayKey();
+  const docRef = doc(db, "attendance", todayKey, "users", name);
+  const snapshot = await getDoc(docRef);
+
+  if (!snapshot.exists()) {
+    alert("No check-in record found today.");
     return;
   }
 
-  db.collection("attendance")
-    .where("name", "==", name)
-    .where("date", "==", today)
-    .get()
-    .then(snapshot => {
-      if (!snapshot.empty) {
-        alert("You already checked in today");
-        return;
-      }
-
-      db.collection("attendance").add({
-        name: name,
-        date: today,
-        checkIn: new Date().toLocaleTimeString(),
-        checkOut: ""
-      });
-
-      alert("Check-in recorded");
-    });
-}
-
-// ✅ 퇴근 (출근 기록이 있을 때만)
-function checkOut() {
-  const name = document.getElementById("nameSelect").value;
-  if (!name) {
-    alert("Please select a name");
-    return;
-  }
-
-  db.collection("attendance")
-    .where("name", "==", name)
-    .where("date", "==", today)
-    .get()
-    .then(snapshot => {
-      if (snapshot.empty) {
-        alert("No check-in record found today");
-        return;
-      }
-
-      snapshot.forEach(doc => {
-        db.collection("attendance").doc(doc.id).update({
-          checkOut: new Date().toLocaleTimeString()
-        });
-      });
-
-      alert("Check-out recorded");
-    });
-}
+  await setDoc(docRef, { checkOut: new Date().toLocaleTimeString() }, { merge: true });
+  alert("Check-out recorded!");
+};
 

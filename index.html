@@ -4,32 +4,24 @@
   <meta charset="UTF-8">
   <title>Attendance</title>
   <link rel="stylesheet" href="style.css">
-
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 </head>
 <body>
+  <h1>Attendance</h1>
+  <div class="container">
+    <select id="nameSelect">
+      <option value="">Select your name</option>
+      <option value="김민수">김민수</option>
+      <option value="이지은">이지은</option>
+      <option value="박준호">박준호</option>
+    </select>
 
-<h1>Attendance Check</h1>
-
-<div class="container">
-
-  <select id="nameSelect">
-    <option value="">-- Select Name --</option>
-    <option value="Hong">Hong</option>
-    <option value="Kim">Kim</option>
-    <option value="Lee">Lee</option>
-  </select>
-
-  <div class="buttons">
-    <button onclick="checkIn()">Check In</button>
-    <button onclick="checkOut()">Check Out</button>
+    <div class="buttons">
+      <button onclick="checkIn()">Check In</button>
+      <button onclick="checkOut()">Check Out</button>
+    </div>
   </div>
 
-</div>
-
-<script src="script.js"></script>
+  <script type="module" src="./script.js"></script>
 </body>
 </html>
 
