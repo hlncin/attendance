@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>출퇴근 관리</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <h1>출퇴근 관리 시스템</h1>
+
+    <div class="container">
+        <p id="date"></p>
+
+        <button onclick="clockIn()">출근</button>
+        <button onclick="clockOut()">퇴근</button>
+
+        <div class="log">
+            <p>출근 시간: <span id="inTime">-</span></p>
+            <p>퇴근 시간: <span id="outTime">-</span></p>
+            <p>근무 시간: <span id="workTime">-</span></p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
