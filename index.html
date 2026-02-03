@@ -1,31 +1,34 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <title>출퇴근 관리</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <title>출퇴근 관리</title>
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 </head>
 <body>
 
-<h2>로그인</h2>
+<h1>출퇴근 관리</h1>
 
-<input id="email" type="email" placeholder="이메일" />
-<br />
-<input id="password" type="password" placeholder="비밀번호" />
-<br />
+<div class="container">
 
-<button onclick="signup()">회원가입</button>
-<button onclick="login()">로그인</button>
+  <label>이름 선택</label>
+  <select id="nameSelect">
+    <option value="">-- 선택 --</option>
+    <option value="홍길동">홍길동</option>
+    <option value="김철수">김철수</option>
+    <option value="이영희">이영희</option>
+  </select>
 
-<hr />
+  <div class="buttons">
+    <button onclick="checkIn()">출근</button>
+    <button onclick="checkOut()">퇴근</button>
+  </div>
 
-<button onclick="checkIn()">출근</button>
-<button onclick="checkOut()">퇴근</button>
-
-<!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+</div>
 
 <script src="script.js"></script>
 </body>
