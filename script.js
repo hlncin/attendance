@@ -79,50 +79,50 @@ const firebaseConfig = {
 
 
   function loadAllLogsForAdmin() {
-    auth.onAuthStateChanged(user => {
-      if (!user) {
-        alert("로그인 필요");
-        location.href = "index.html";
-        return;
-      }
+    const user = auth.currentUser;
   
-      if (user.email !== ADMIN_EMAIL) {
-        alert("관리자만 접근 가능합니다");
-        location.href = "index.html";
-        return;
-      }
+    if (!user) {
+      alert("로그인 필요");
+      location.href = "index.html";
+      return;
+    }
   
-      db.collection("attendance")
-        .get()
-        .then(snapshot => {
-          const table = document.getElementById("adminLogTable");
-          table.innerHTML = "";
+    if (user.email !== ADMIN_EMAIL) {
+      alert("관리자만 접근 가능합니다");
+      location.href = "index.html";
+      return;
+    }
   
-          snapshot.forEach(dateDoc => {
-            const date = dateDoc.id;
+    db.collection("attendance")
+      .get()
+      .then(snapshot => {
+        const table = document.getElementById("adminLogTable");
+        table.innerHTML = "";
   
-            dateDoc.ref
-              .collection("logs")
-              .get()
-              .then(logsSnap => {
-                logsSnap.forEach(logDoc => {
-                  const d = logDoc.data();
+        snapshot.forEach(dateDoc => {
+          const date = dateDoc.id;
   
-                  const row = `
-                    <tr>
-                      <td>${date}</td>
-                      <td>${d.email}</td>
-                      <td>${d.checkIn || "-"}</td>
-                      <td>${d.checkOut || "-"}</td>
-                    </tr>
-                  `;
-                  table.innerHTML += row;
-                });
+          dateDoc.ref
+            .collection("logs")
+            .get()
+            .then(logsSnap => {
+              logsSnap.forEach(logDoc => {
+                const d = logDoc.data();
+  
+                const row = `
+                  <tr>
+                    <td>${date}</td>
+                    <td>${d.email}</td>
+                    <td>${d.checkIn || "-"}</td>
+                    <td>${d.checkOut || "-"}</td>
+                  </tr>
+                `;
+                table.innerHTML += row;
               });
-          });
+            });
         });
-    });
-  }
+      });
+  }  
     
   if (document.getElementById("adminLogTable")) {
     loadAllLogsForAdmin();
