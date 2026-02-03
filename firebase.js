@@ -15,9 +15,15 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 
-// 오늘 날짜 키 (YYYY-MM-DD)
+// 인도 시간 기준 오늘 날짜 (YYYY-MM-DD)
 export function getTodayKey() {
-  const today = new Date();
-  today.setHours(0,0,0,0);
-  return today.toISOString().slice(0,10);
+  const now = new Date();
+
+  // UTC 시간으로 변환 후 +5:30 (IST)
+  const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+  const istTime = new Date(utc + 5.5 * 60 * 60 * 1000);
+
+  return istTime.toISOString().slice(0, 10); // "YYYY-MM-DD"
 }
+
+
