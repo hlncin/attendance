@@ -1,63 +1,142 @@
+/* 기본 리셋 */
 * {
     box-sizing: border-box;
-    font-family: Arial, sans-serif;
-  }
-  
-  body {
     margin: 0;
-    height: 100vh;
-    background: #f4f6f8;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+                 Roboto, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
   }
   
+  /* 전체 화면 */
+  body {
+    min-height: 100vh;
+    background: #f5f7fb;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+    color: #222;
+  }
+  
+  /* 제목 */
+  h1 {
+    font-size: 36px;
+    font-weight: 700;
+    margin-bottom: 40px;
+  }
+  
+  /* 메인 컨테이너 */
   .container {
     width: 100%;
-    max-width: 500px;
-    padding: 40px;
-    background: white;
-    border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    text-align: center;
+    max-width: 520px;
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 40px 32px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
   }
   
-  h1 {
-    font-size: 2.2rem;
-    margin-bottom: 30px;
-  }
-  
+  /* 이름 선택 */
   select {
     width: 100%;
-    padding: 18px;
-    font-size: 1.2rem;
-    margin-bottom: 30px;
+    padding: 18px 20px;
+    font-size: 20px;
     border-radius: 12px;
-    border: 1px solid #ccc;
+    border: 1px solid #dcdfe6;
+    background: #fafafa;
+    cursor: pointer;
   }
   
-  .btn {
-    width: 100%;
-    padding: 22px;
-    font-size: 1.4rem;
+  select:focus {
+    outline: none;
+    border-color: #4f46e5;
+    background: #fff;
+  }
+  
+  /* 버튼 영역 */
+  .buttons {
+    display: flex;
+    gap: 16px;
+  }
+  
+  /* 버튼 공통 */
+  button {
+    flex: 1;
+    padding: 20px 0;
+    font-size: 20px;
+    font-weight: 600;
     border: none;
     border-radius: 14px;
     cursor: pointer;
-    margin-bottom: 20px;
+    transition: all 0.2s ease;
   }
   
-  .checkin {
-    background: #4CAF50;
-    color: white;
+  /* 출근 버튼 */
+  button:nth-child(1) {
+    background: #4f46e5;
+    color: #ffffff;
   }
   
-  .checkout {
-    background: #f44336;
-    color: white;
+  button:nth-child(1):hover {
+    background: #4338ca;
   }
   
-  .btn:active {
-    transform: scale(0.98);
+  /* 퇴근 버튼 */
+  button:nth-child(2) {
+    background: #10b981;
+    color: #ffffff;
+  }
+  
+  button:nth-child(2):hover {
+    background: #059669;
+  }
+  
+  /* 관리자 테이블 */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 40px;
+    background: #ffffff;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+  }
+  
+  thead {
+    background: #4f46e5;
+    color: #ffffff;
+  }
+  
+  th, td {
+    padding: 16px 18px;
+    text-align: center;
+    font-size: 16px;
+  }
+  
+  tbody tr:nth-child(even) {
+    background: #f9fafb;
+  }
+  
+  /* 모바일 대응 */
+  @media (max-width: 480px) {
+    h1 {
+      font-size: 28px;
+    }
+  
+    .container {
+      padding: 28px 20px;
+    }
+  
+    select {
+      font-size: 18px;
+    }
+  
+    button {
+      font-size: 18px;
+      padding: 18px 0;
+    }
   }
   
   
