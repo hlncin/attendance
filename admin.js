@@ -4,6 +4,8 @@ import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/f
 
 async function loadTodayAttendance() {
   const todayKey = getTodayKey();
+  const title = document.getElementById("title");
+  title.textContent = `Today's Attendance (${todayKey})`;
   const usersRef = collection(db, "attendance", todayKey, "users");
   const snapshot = await getDocs(usersRef);
 
