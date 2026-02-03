@@ -1,60 +1,73 @@
-// 오늘 날짜 표시
-const today = new Date();
-document.getElementById("date").innerText =
-    today.getFullYear() + "년 " +
-    (today.getMonth() + 1) + "월 " +
-    today.getDate() + "일";
-
-// 출근
-function clockIn() {
-    const now = new Date();
-    localStorage.setItem("inTime", now.getTime());
-    document.getElementById("inTime").innerText = formatTime(now);
-}
-
-// 퇴근
-function clockOut() {
-    const now = new Date();
-    localStorage.setItem("outTime", now.getTime());
-    document.getElementById("outTime").innerText = formatTime(now);
-
-    calculateWorkTime();
-}
-
-// 근무 시간 계산
-function calculateWorkTime() {
-    const inTime = localStorage.getItem("inTime");
-    const outTime = localStorage.getItem("outTime");
-
-    if (!inTime || !outTime) return;
-
-    const diff = outTime - inTime;
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff / (1000 * 60)) % 60);
-
-    document.getElementById("workTime").innerText =
-        hours + "시간 " + minutes + "분";
-}
-
-// 시간 포맷
-function formatTime(date) {
-    return date.getHours().toString().padStart(2, "0") + ":" +
-           date.getMinutes().toString().padStart(2, "0");
-}
-
-// 새로고침해도 유지
-window.onload = function () {
-    const inTime = localStorage.getItem("inTime");
-    const outTime = localStorage.getItem("outTime");
-
-    if (inTime) {
-        document.getElementById("inTime").innerText =
-            formatTime(new Date(Number(inTime)));
-    }
-
-    if (outTime) {
-        document.getElementById("outTime").innerText =
-            formatTime(new Date(Number(outTime)));
-        calculateWorkTime();
-    }
-};
+// 🔥 Firebase 설정 (네 config로 교체)
+const firebaseConfig = {
+    apiKey: "AIzaSyBDmKX2EzmZQYtLhGWHPhrNiAbYMQpsEPI",
+    authDomain: "attendance-app-4cc52.firebaseapp.com",
+    projectId: "attendance-app-4cc52",
+    storageBucket: "attendance-app-4cc52.firebasestorage.app",
+    messagingSenderId: "862990205208",
+    appId: "1:862990205208:web:f6caa206cd05c86a8a9e6d",
+    measurementId: "G-50DWEKYNKH"
+  };
+  
+  // 초기화
+  firebase.initializeApp(firebaseConfig);
+  
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+  
+  const today = new Date().toISOString().split("T")[0];
+  
+  // 회원가입
+  function signup() {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+  
+    auth.createUserWithEmailAndPassword(email, password)
+      .then(() => alert("회원가입 완료"))
+      .catch(err => alert(err.message));
+  }
+  
+  // 로그인
+  function login() {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+  
+    auth.signInWithEmailAndPassword(email, password)
+      .then(() => alert("로그인 성공"))
+      .catch(err => alert(err.message));
+  }
+  
+  // 출근
+  function checkIn() {
+    const user = auth.currentUser;
+    if (!user) return alert("로그인 먼저 해줘!");
+  
+    db.collection("attendance")
+      .doc(today)
+      .collection("logs")
+      .doc(user.uid)
+      .set({
+        email: user.email,
+        checkIn: new Date().toLocaleTimeString(),
+        date: today
+      }, { merge: true });
+  
+    alert("출근 기록 완료!");
+  }
+  
+  // 퇴근
+  function checkOut() {
+    const user = auth.currentUser;
+    if (!user) return alert("로그인 먼저 해줘!");
+  
+    db.collection("attendance")
+      .doc(today)
+      .collection("logs")
+      .doc(user.uid)
+      .set({
+        checkOut: new Date().toLocaleTimeString()
+      }, { merge: true });
+  
+    alert("퇴근 기록 완료!");
+  }
+  

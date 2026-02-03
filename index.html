@@ -7,22 +7,27 @@
 </head>
 <body>
 
-    <h1>출퇴근 관리 시스템</h1>
+<h2>로그인</h2>
 
-    <div class="container">
-        <p id="date"></p>
+<input id="email" type="email" placeholder="이메일" />
+<br />
+<input id="password" type="password" placeholder="비밀번호" />
+<br />
 
-        <button onclick="clockIn()">출근</button>
-        <button onclick="clockOut()">퇴근</button>
+<button onclick="signup()">회원가입</button>
+<button onclick="login()">로그인</button>
 
-        <div class="log">
-            <p>출근 시간: <span id="inTime">-</span></p>
-            <p>퇴근 시간: <span id="outTime">-</span></p>
-            <p>근무 시간: <span id="workTime">-</span></p>
-        </div>
-    </div>
+<hr />
 
-    <script src="script.js"></script>
+<button onclick="checkIn()">출근</button>
+<button onclick="checkOut()">퇴근</button>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script src="script.js"></script>
 </body>
 </html>
 
