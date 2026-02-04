@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const ADMIN_PIN = "0317";
 
   /*****************
-   * 직원 이름 리스트 (항상 고정)
+   * 직원 이름 리스트 (고정)
    *****************/
   const EMPLOYEES = [
     "Jakir",
@@ -27,6 +27,20 @@ document.addEventListener("DOMContentLoaded", () => {
     "Sam Lee",
     "Sudarla"
   ];
+
+  /*****************
+   * 시간 포맷 함수
+   * HH:MM → 오전/오후 X시 XX분
+   *****************/
+  function formatTime(timeStr) {
+    if (!timeStr || timeStr === "-") return "-";
+
+    const [h, m] = timeStr.split(":").map(Number);
+    const period = h < 12 ? "오전" : "오후";
+    const hour = h % 12 === 0 ? 12 : h % 12;
+
+    return `${period} ${hour}시 ${m.toString().padStart(2, "0")}분`;
+  }
 
   /*****************
    * PIN 요소
@@ -53,7 +67,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /*****************
-   * 오늘 출석
+   * 오늘 출석 로드
    *****************/
   async function loadTodayAttendance() {
     const todayKey = getTodayKey();
@@ -68,8 +82,13 @@ document.addEventListener("DOMContentLoaded", () => {
       const ref = doc(db, "attendance", todayKey, "users", name);
       const snap = await getDoc(ref);
 
-      const attend = snap.exists() && snap.data().attend ? snap.data().attend : "-";
-      const leave  = snap.exists() && snap.data().leave  ? snap.data().leave  : "-";
+      const attend = snap.exists() && snap.data().attend
+        ? formatTime(snap.data().attend)
+        : "-";
+
+      const leave = snap.exists() && snap.data().leave
+        ? formatTime(snap.data().leave)
+        : "-";
 
       tbody.innerHTML += `
         <tr>
@@ -130,8 +149,13 @@ document.addEventListener("DOMContentLoaded", () => {
         const ref = doc(db, "attendance", date, "users", name);
         const snap = await getDoc(ref);
 
-        const attend = snap.exists() && snap.data().attend ? snap.data().attend : "-";
-        const leave  = snap.exists() && snap.data().leave  ? snap.data().leave  : "-";
+        const attend = snap.exists() && snap.data().attend
+          ? formatTime(snap.data().attend)
+          : "-";
+
+        const leave = snap.exists() && snap.data().leave
+          ? formatTime(snap.data().leave)
+          : "-";
 
         html += `
           <tr>
