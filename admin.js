@@ -3,8 +3,6 @@ import {
   collection,
   getDocs,
   doc,
-  setDoc,
-  serverTimestamp,
   onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
@@ -27,9 +25,9 @@ const employees = [
 const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD
 
 /* =====================
-   ADMIN LOGIN / LOGOUT
+   LOGIN / LOGOUT
 ===================== */
-window.login = () => {
+function login() {
   const pw = document.getElementById("password").value;
   if (pw === "0317") {
     localStorage.setItem("admin", "true");
@@ -37,24 +35,21 @@ window.login = () => {
   } else {
     alert("Wrong password");
   }
-};
+}
 
-window.logout = () => {
+function logout() {
   localStorage.removeItem("admin");
   location.reload();
-};
+}
 
 /* =====================
-   BUTTON EVENT 연결
+   BUTTON 연결
 ===================== */
-document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("login-btn").addEventListener("click", login);
-  document.getElementById("logout-btn").addEventListener("click", logout);
+const loginBtn = document.getElementById("login-btn");
+const logoutBtn = document.getElementById("logout-btn");
 
-  if (localStorage.getItem("admin") === "true") {
-    initAdmin();
-  }
-});
+if (loginBtn) loginBtn.addEventListener("click", login);
+if (logoutBtn) logoutBtn.addEventListener("click", logout);
 
 /* =====================
    INITIALIZE ADMIN PANEL
@@ -68,8 +63,13 @@ function initAdmin() {
   watchToday();
 }
 
+// 이미 로그인 되어있으면
+if (localStorage.getItem("admin") === "true") {
+  initAdmin();
+}
+
 /* =====================
-   LOAD TODAY TABLE
+   TODAY TABLE
 ===================== */
 async function loadToday() {
   const box = document.getElementById("today");
@@ -100,7 +100,7 @@ async function loadToday() {
   html += "</tbody></table>";
   box.innerHTML += html;
 
-  // 오늘 출석 초기값 로딩
+  // 오늘 출석 초기 로딩
   const snap = await getDocs(collection(db, "attendance", today, "records"));
   snap.forEach(docSnap => {
     const r = docSnap.data();
@@ -110,7 +110,7 @@ async function loadToday() {
 }
 
 /* =====================
-   WATCH TODAY (실시간 업데이트)
+   WATCH TODAY
 ===================== */
 function watchToday() {
   const col = collection(db, "attendance", today, "records");
@@ -124,7 +124,7 @@ function watchToday() {
 }
 
 /* =====================
-   LOAD HISTORY
+   HISTORY
 ===================== */
 async function loadHistory() {
   const box = document.getElementById("history");
@@ -148,7 +148,7 @@ async function loadHistory() {
 }
 
 /* =====================
-   LOAD HISTORY RECORDS
+   HISTORY RECORDS
 ===================== */
 window.loadHistoryRecords = async (dateId) => {
   const container = document.getElementById("history-records");
