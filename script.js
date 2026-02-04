@@ -1,74 +1,60 @@
-import { db } from "./firebase.js";
+// script.js
 import {
-  collection,
-  getDocs,
-  doc,
-  getDoc,
-  setDoc
+  collection, doc, getDocs, getDoc,
+  setDoc, updateDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-/* ===== UTIL ===== */
-function todayKey() {
-  return new Date().toISOString().slice(0, 10);
+const today = new Date().toISOString().slice(0,10);
+const empTable = document.getElementById("employeeTable");
+
+async function loadEmployees() {
+  empTable.innerHTML = "";
+  const empSnap = await getDocs(collection(db, "employees"));
+
+  for (const emp of empSnap.docs) {
+    if (!emp.data().active) continue;
+
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${emp.data().name}</td>
+      <td><button class="attend">Attend</button></td>
+      <td><button class="leave">Leave</button></td>
+    `;
+
+    row.querySelector(".attend").onclick = () => attend(emp.id);
+    row.querySelector(".leave").onclick = () => leave(emp.id);
+
+    empTable.appendChild(row);
+  }
 }
 
-function formatTime() {
-  const d = new Date();
-  let h = d.getHours();
-  const m = d.getMinutes().toString().padStart(2, "0");
-  const isPM = h >= 12;
-  h = h % 12 || 12;
-  return `${isPM ? "PM" : "AM"} ${h}:${m}`;
-}
-
-/* ===== MAIN ===== */
-const tbody = document.getElementById("attendance-list");
-const today = todayKey();
-
-const empSnap = await getDocs(collection(db, "employees"));
-
-for (const emp of empSnap.docs) {
-  if (!emp.data().active) continue;
-
-  const name = emp.id;
-  const ref = doc(db, "attendance", today, "records", name);
+async function attend(empId) {
+  const ref = doc(db, "attendance", today, "records", empId);
   const snap = await getDoc(ref);
-  const record = snap.exists() ? snap.data() : {};
 
-  const tr = document.createElement("tr");
+  if (snap.exists() && snap.data().attendAt) {
+    alert("Already attended today.");
+    return;
+  }
 
-  tr.innerHTML = `
-    <td>${name}</td>
-    <td>
-      ${
-        record.attend
-          ? `<span class="status">${record.attend}</span>`
-          : `<button class="attend">Attend</button>`
-      }
-    </td>
-    <td>
-      ${
-        record.leave
-          ? `<span class="status">${record.leave}</span>`
-          : `<button class="leave">Leave</button>`
-      }
-    </td>
-  `;
-
-  tr.querySelectorAll("button").forEach(btn => {
-    btn.onclick = async () => {
-      const type = btn.textContent.toLowerCase();
-
-      if (record[type]) {
-        alert(`Already ${type}ed`);
-        return;
-      }
-
-      await setDoc(ref, { [type]: formatTime() }, { merge: true });
-      location.reload();
-    };
-  });
-
-  tbody.appendChild(tr);
+  await setDoc(ref, { attendAt: serverTimestamp(), leaveAt: null }, { merge:true });
 }
+
+async function leave(empId) {
+  const ref = doc(db, "attendance", today, "records", empId);
+  const snap = await getDoc(ref);
+
+  if (!snap.exists() || !snap.data().attendAt) {
+    alert("Attend first.");
+    return;
+  }
+  if (snap.data().leaveAt) {
+    alert("Already left.");
+    return;
+  }
+
+  await updateDoc(ref, { leaveAt: serverTimestamp() });
+}
+
+loadEmployees();
 
