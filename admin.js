@@ -1,189 +1,161 @@
-import { db } from "./firebase.js";
+console.log("🔥 admin.js loaded");
+
+import { db, getTodayKey } from "./firebase.js";
 import {
-  collection,
-  getDocs,
   doc,
-  onSnapshot
+  getDoc,
+  collection,
+  getDocs
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-/* =====================
-   EMPLOYEE LIST
-===================== */
-const employees = [
-  "Kiran Barthwal",
-  "Jeenat Khan",
-  "Rohin Dixit",
-  "Kamal Hassain",
-  "Sudarla",
-  "Jakir",
-  "Sam Lee"
-];
+document.addEventListener("DOMContentLoaded", () => {
 
-/* =====================
-   TODAY DATE
-===================== */
-const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD
+  const ADMIN_PIN = "0317";
 
-/* =====================
-   LOGIN / LOGOUT
-===================== */
-function login() {
-  const pw = document.getElementById("password").value;
-  if (pw === "0317") {
-    localStorage.setItem("admin", "true");
-    initAdmin();
-  } else {
-    alert("Wrong password");
+  const EMPLOYEES = [
+    "Jakir",
+    "Jeenat Khan",
+    "Kamal Hassain",
+    "Kiran Barthwal",
+    "Robin Dixit",
+    "Sam Lee",
+    "Sudarla"
+  ];
+
+  /*****************
+   * 🔐 어떤 시간 문자열이 와도 안전한 포맷
+   *****************/
+  function formatTime(timeStr) {
+    if (!timeStr || timeStr === "-") return "-";
+
+    // 숫자만 추출 (예: 2026-02-04T13:25:44 → [13,25,44])
+    const nums = timeStr.match(/\d+/g);
+    if (!nums || nums.length < 2) return "-";
+
+    const h = Number(nums[nums.length >= 3 ? nums.length - 3 : 0]);
+    const m = Number(nums[nums.length - 2]);
+
+    if (isNaN(h) || isNaN(m)) return "-";
+
+    const period = h < 12 ? "오전" : "오후";
+    const hour12 = h % 12 === 0 ? 12 : h % 12;
+
+    return `${period} ${hour12}시 ${m.toString().padStart(2, "0")}분`;
   }
-}
 
-function logout() {
-  localStorage.removeItem("admin");
-  location.reload();
-}
+  const pinBtn = document.getElementById("pinBtn");
+  const pinInput = document.getElementById("pinInput");
+  const pinError = document.getElementById("pinError");
+  const pinSection = document.getElementById("pinSection");
+  const adminSection = document.getElementById("adminSection");
 
-/* =====================
-   BUTTON 연결
-===================== */
-const loginBtn = document.getElementById("login-btn");
-const logoutBtn = document.getElementById("logout-btn");
+  pinBtn.addEventListener("click", checkPin);
+  pinInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") checkPin();
+  });
 
-if (loginBtn) loginBtn.addEventListener("click", login);
-if (logoutBtn) logoutBtn.addEventListener("click", logout);
+  function checkPin() {
+    if (pinInput.value === ADMIN_PIN) {
+      pinSection.style.display = "none";
+      adminSection.style.display = "block";
+      loadTodayAttendance();
+    } else {
+      pinError.textContent = "PIN이 올바르지 않습니다.";
+    }
+  }
 
-/* =====================
-   INITIALIZE ADMIN PANEL
-===================== */
-function initAdmin() {
-  document.getElementById("login").style.display = "none";
-  document.getElementById("admin").style.display = "flex";
+  async function loadTodayAttendance() {
+    const todayKey = getTodayKey();
+    document.getElementById("title").textContent =
+      `Today's Attendance (${todayKey})`;
 
-  loadToday();
-  loadHistory();
-  watchToday();
-}
+    const tbody = document.getElementById("attendanceTable");
+    tbody.innerHTML = "";
 
-// 이미 로그인 되어있으면
-if (localStorage.getItem("admin") === "true") {
-  initAdmin();
-}
+    for (const name of EMPLOYEES) {
+      const ref = doc(db, "attendance", todayKey, "users", name);
+      const snap = await getDoc(ref);
 
-/* =====================
-   TODAY TABLE
-===================== */
-async function loadToday() {
-  const box = document.getElementById("today");
-  box.innerHTML = `<h2>Today (${today})</h2>`;
+      const attend = snap.exists() && snap.data().attend
+        ? formatTime(snap.data().attend)
+        : "-";
 
-  let html = `
-    <table>
-      <thead>
+      const leave = snap.exists() && snap.data().leave
+        ? formatTime(snap.data().leave)
+        : "-";
+
+      tbody.innerHTML += `
         <tr>
-          <th>Name</th>
-          <th>Attend</th>
-          <th>Leave</th>
+          <td>${name}</td>
+          <td>${attend}</td>
+          <td>${leave}</td>
         </tr>
-      </thead>
-      <tbody>
-  `;
-
-  for (let name of employees) {
-    html += `
-      <tr>
-        <td>${name}</td>
-        <td id="attend-${name}">-</td>
-        <td id="leave-${name}">-</td>
-      </tr>
-    `;
+      `;
+    }
   }
 
-  html += "</tbody></table>";
-  box.innerHTML += html;
+  const toggleBtn = document.getElementById("toggleHistory");
+  const historySection = document.getElementById("historySection");
+  let historyLoaded = false;
 
-  // 오늘 출석 초기 로딩
-  const snap = await getDocs(collection(db, "attendance", today, "records"));
-  snap.forEach(docSnap => {
-    const r = docSnap.data();
-    if (r.attendAt) document.getElementById(`attend-${docSnap.id}`)?.textContent = r.attendAt.toDate().toLocaleTimeString();
-    if (r.leaveAt) document.getElementById(`leave-${docSnap.id}`)?.textContent = r.leaveAt.toDate().toLocaleTimeString();
+  toggleBtn.addEventListener("click", async () => {
+    const open = historySection.style.display === "block";
+    historySection.style.display = open ? "none" : "block";
+    toggleBtn.textContent = open ? "View more ▼" : "Hide ▲";
+
+    if (!historyLoaded) {
+      await loadHistory();
+      historyLoaded = true;
+    }
   });
-}
 
-/* =====================
-   WATCH TODAY
-===================== */
-function watchToday() {
-  const col = collection(db, "attendance", today, "records");
-  onSnapshot(col, snap => {
-    snap.forEach(docSnap => {
-      const r = docSnap.data();
-      if (r.attendAt) document.getElementById(`attend-${docSnap.id}`)?.textContent = r.attendAt.toDate().toLocaleTimeString();
-      if (r.leaveAt) document.getElementById(`leave-${docSnap.id}`)?.textContent = r.leaveAt.toDate().toLocaleTimeString();
-    });
-  });
-}
+  async function loadHistory() {
+    const todayKey = getTodayKey();
+    const container = document.getElementById("historyContainer");
+    container.innerHTML = "";
 
-/* =====================
-   HISTORY
-===================== */
-async function loadHistory() {
-  const box = document.getElementById("history");
-  box.innerHTML = "<h2>History</h2>";
+    const snap = await getDocs(collection(db, "attendance"));
+    const dates = snap.docs
+      .map(d => d.id)
+      .filter(d => d !== todayKey)
+      .sort((a, b) => b.localeCompare(a));
 
-  const snap = await getDocs(collection(db, "attendance"));
-  if (snap.empty) {
-    box.innerHTML += "<p>No history found.</p>";
-    return;
+    for (const date of dates) {
+      let html = `
+        <div class="history-day">
+          <h4>${date}</h4>
+          <table>
+            <tr>
+              <th>Name</th>
+              <th>Check-in</th>
+              <th>Check-out</th>
+            </tr>
+      `;
+
+      for (const name of EMPLOYEES) {
+        const ref = doc(db, "attendance", date, "users", name);
+        const snap = await getDoc(ref);
+
+        const attend = snap.exists() && snap.data().attend
+          ? formatTime(snap.data().attend)
+          : "-";
+
+        const leave = snap.exists() && snap.data().leave
+          ? formatTime(snap.data().leave)
+          : "-";
+
+        html += `
+          <tr>
+            <td>${name}</td>
+            <td>${attend}</td>
+            <td>${leave}</td>
+          </tr>
+        `;
+      }
+
+      html += "</table></div>";
+      container.innerHTML += html;
+    }
   }
-
-  let html = "<ul>";
-  snap.forEach(docSnap => {
-    const dateId = docSnap.id;
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateId)) return;
-    html += `<li><button onclick="loadHistoryRecords('${dateId}')">📅 ${dateId}</button></li>`;
-  });
-  html += "</ul>";
-  box.innerHTML += html;
-  box.innerHTML += `<div id="history-records" style="margin-top:20px;"></div>`;
-}
-
-/* =====================
-   HISTORY RECORDS
-===================== */
-window.loadHistoryRecords = async (dateId) => {
-  const container = document.getElementById("history-records");
-  container.innerHTML = `<h3>Records for ${dateId}</h3>`;
-
-  const snap = await getDocs(collection(db, "attendance", dateId, "records"));
-  if (snap.empty) {
-    container.innerHTML += "<p>No attendance records.</p>";
-    return;
-  }
-
-  let html = `
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Attend</th>
-          <th>Leave</th>
-        </tr>
-      </thead>
-      <tbody>
-  `;
-
-  snap.forEach(docSnap => {
-    const r = docSnap.data();
-    html += `
-      <tr>
-        <td>${docSnap.id}</td>
-        <td>${r.attendAt ? r.attendAt.toDate().toLocaleTimeString() : "-"}</td>
-        <td>${r.leaveAt ? r.leaveAt.toDate().toLocaleTimeString() : "-"}</td>
-      </tr>
-    `;
-  });
-
-  html += "</tbody></table>";
-  container.innerHTML += html;
-};
+});
 
