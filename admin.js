@@ -1,74 +1,79 @@
 import { db } from "./firebase.js";
 import {
-  collection,
-  addDoc,
-  getDocs,
-  updateDoc,
-  doc
+  collection, getDocs, doc, setDoc, updateDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-const ADMIN_PIN = "0317";
-
-const pinSection = document.getElementById("pinSection");
-const adminSection = document.getElementById("adminSection");
-const pinBtn = document.getElementById("pinBtn");
-const pinInput = document.getElementById("pinInput");
-const pinError = document.getElementById("pinError");
-
-const body = document.getElementById("empBody");
-const addBtn = document.getElementById("addBtn");
-const newName = document.getElementById("newName");
-
-pinBtn.onclick = () => {
-  if (pinInput.value === ADMIN_PIN) {
-    pinSection.style.display = "none";
-    adminSection.style.display = "block";
-    loadEmployees();
+window.login = () => {
+  if (pinInput.value === "0317") {
+    document.getElementById("pin-box").style.display = "none";
+    document.getElementById("admin-app").style.display = "flex";
+    loadToday();
   } else {
-    pinError.textContent = "Invalid PIN";
+    alert("Wrong PIN");
   }
 };
 
-async function loadEmployees() {
-  body.innerHTML = "";
-  const snap = await getDocs(collection(db, "employees"));
+window.showTab = (id) => {
+  document.querySelectorAll("main > div").forEach(d => d.style.display = "none");
+  document.getElementById(id).style.display = "block";
+  if (id === "today") loadToday();
+  if (id === "history") loadHistory();
+  if (id === "employees") loadEmployees();
+};
 
+function todayKey() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+async function loadToday() {
+  const div = document.getElementById("today");
+  div.innerHTML = "<h2>Today Attendance</h2>";
+
+  const snap = await getDocs(collection(db, "attendance", todayKey(), "records"));
+
+  let html = "<table><tr><th>Name</th><th>Attend</th><th>Leave</th></tr>";
   snap.forEach(d => {
-    const emp = d.data();
+    html += `<tr><td>${d.id}</td><td>${d.data().attend ?? "-"}</td><td>${d.data().leave ?? "-"}</td></tr>`;
+  });
+  html += "</table>";
 
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${emp.name}</td>
-      <td>${emp.active ? "Active" : "Inactive"}</td>
-      <td>
-        ${emp.active ? `<button data-id="${d.id}">Deactivate</button>` : ""}
-      </td>
-    `;
-    body.appendChild(tr);
+  div.innerHTML += html;
+}
+
+async function loadHistory() {
+  const div = document.getElementById("history");
+  div.innerHTML = "<h2>History</h2>";
+
+  const days = await getDocs(collection(db, "attendance"));
+  days.forEach(d => {
+    div.innerHTML += `<p>${d.id}</p>`;
   });
 }
 
-addBtn.onclick = async () => {
-  if (!newName.value.trim()) return;
+async function loadEmployees() {
+  const div = document.getElementById("employees");
+  div.innerHTML = `
+    <h2>Employees</h2>
+    <input id="newName" placeholder="Name">
+    <button onclick="addEmployee()">Add</button>
+  `;
 
-  await addDoc(collection(db, "employees"), {
-    name: newName.value.trim(),
-    active: true,
-    createdAt: new Date()
+  const snap = await getDocs(collection(db, "employees"));
+  snap.forEach(e => {
+    div.innerHTML += `
+      <div>${e.id}
+        <button onclick="fireEmployee('${e.id}')">Fire</button>
+      </div>`;
   });
+}
 
-  newName.value = "";
+window.addEmployee = async () => {
+  await setDoc(doc(db, "employees", newName.value), { active: true });
   loadEmployees();
 };
 
-body.addEventListener("click", async e => {
-  const id = e.target.dataset.id;
-  if (!id) return;
-
-  await updateDoc(doc(db, "employees", id), {
-    active: false
-  });
-
+window.fireEmployee = async (name) => {
+  await updateDoc(doc(db, "employees", name), { active: false });
   loadEmployees();
-});
+};
 

@@ -1,85 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Admin</title>
-
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      display: flex;
-      height: 100vh;
-    }
-
-    aside {
-      width: 220px;
-      background: #1e272e;
-      color: white;
-      padding: 20px;
-    }
-
-    main {
-      flex: 1;
-      padding: 30px;
-      background: #f5f6fa;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: white;
-    }
-
-    th, td {
-      border: 1px solid #ddd;
-      padding: 10px;
-      text-align: center;
-    }
-
-    #adminSection {
-      display: none;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Admin</title>
+<style>
+body { display:flex; font-family:Arial }
+aside { width:200px; background:#f0f0f0; padding:10px }
+main { flex:1; padding:20px }
+button { display:block; width:100%; margin-bottom:8px }
+table { width:100%; border-collapse:collapse }
+th,td { border:1px solid #ccc; padding:6px }
+</style>
 </head>
 
 <body>
 
+<div id="pin-box">
+  <h3>Admin Login</h3>
+  <input id="pinInput" type="password" placeholder="PIN">
+  <button onclick="login()">Enter</button>
+</div>
+
+<div id="admin-app" style="display:none">
 <aside>
-  <h2>Admin</h2>
-  <div>Employees</div>
+  <button onclick="showTab('today')">Today</button>
+  <button onclick="showTab('history')">History</button>
+  <button onclick="showTab('employees')">Employees</button>
 </aside>
 
 <main>
-
-  <!-- PIN -->
-  <div id="pinSection">
-    <h2>Admin Access</h2>
-    <input id="pinInput" type="password" placeholder="Enter PIN" />
-    <button id="pinBtn">Enter</button>
-    <p id="pinError" style="color:red;"></p>
-  </div>
-
-  <!-- Admin -->
-  <div id="adminSection">
-    <h2>Employee Management</h2>
-
-    <input id="newName" placeholder="Employee name" />
-    <button id="addBtn">Add</button>
-
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Status</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody id="empBody"></tbody>
-    </table>
-  </div>
-
+  <div id="today"></div>
+  <div id="history" style="display:none"></div>
+  <div id="employees" style="display:none"></div>
 </main>
+</div>
 
 <script type="module" src="admin.js"></script>
 </body>

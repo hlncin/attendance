@@ -1,85 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Attendance</title>
-
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      display: flex;
-      height: 100vh;
-    }
-
-    aside {
-      width: 220px;
-      background: #2f3542;
-      color: white;
-      padding: 20px;
-    }
-
-    aside h2 {
-      font-size: 18px;
-      margin-bottom: 20px;
-    }
-
-    aside div {
-      margin-bottom: 10px;
-    }
-
-    main {
-      flex: 1;
-      padding: 30px;
-      background: #f5f6fa;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: white;
-    }
-
-    th, td {
-      border: 1px solid #ddd;
-      padding: 10px;
-      text-align: center;
-    }
-
-    th {
-      background: #f1f2f6;
-    }
-
-    button {
-      padding: 6px 10px;
-      cursor: pointer;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Attendance</title>
+<style>
+body { font-family: Arial; padding:20px }
+table { width:100%; border-collapse:collapse }
+th,td { border:1px solid #ccc; padding:8px }
+button { padding:6px 10px; cursor:pointer }
+</style>
 </head>
 
 <body>
+<h2>Attendance</h2>
 
-<aside>
-  <h2>Attendance</h2>
-  <div>Today</div>
-</aside>
-
-<main>
-  <h2>Today Attendance</h2>
-
-  <table>
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Attend</th>
-        <th>Leave</th>
-      </tr>
-    </thead>
-    <tbody id="attendanceBody"></tbody>
-  </table>
-</main>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Attend</th>
+  <th>Leave</th>
+</tr>
+</thead>
+<tbody id="attendance-list"></tbody>
+</table>
 
 <script type="module" src="script.js"></script>
 </body>
 </html>
-
