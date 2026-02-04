@@ -51,6 +51,7 @@ body {
 #admin {
   display: none;
   height: 100vh;
+  display: flex;
 }
 
 .sidebar {
@@ -99,6 +100,15 @@ th, td {
 th {
   background: #f3f4f6;
 }
+
+button.record-btn {
+  padding: 5px 10px;
+  border: none;
+  border-radius: 4px;
+  background: #2563eb;
+  color: white;
+  cursor: pointer;
+}
 </style>
 </head>
 
@@ -109,7 +119,7 @@ th {
   <div class="login-box">
     <h3>Admin Login</h3>
     <input type="password" id="password" placeholder="Password">
-    <button onclick="login()">Enter</button>
+    <button id="login-btn">Enter</button>
   </div>
 </div>
 
@@ -119,7 +129,7 @@ th {
     <h2>Admin</h2>
     <button onclick="showTab('today')">Today</button>
     <button onclick="showTab('history')">History</button>
-    <button onclick="logout()">Logout</button>
+    <button id="logout-btn">Logout</button>
   </div>
 
   <div class="main">

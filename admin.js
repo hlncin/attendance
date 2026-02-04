@@ -9,7 +9,25 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 /* =====================
-   ADMIN LOGIN
+   EMPLOYEE LIST
+===================== */
+const employees = [
+  "Kiran Barthwal",
+  "Jeenat Khan",
+  "Rohin Dixit",
+  "Kamal Hassain",
+  "Sudarla",
+  "Jakir",
+  "Sam Lee"
+];
+
+/* =====================
+   TODAY DATE
+===================== */
+const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD
+
+/* =====================
+   ADMIN LOGIN / LOGOUT
 ===================== */
 window.login = () => {
   const pw = document.getElementById("password").value;
@@ -26,32 +44,33 @@ window.logout = () => {
   location.reload();
 };
 
+/* =====================
+   BUTTON EVENT 연결
+===================== */
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("login-btn").addEventListener("click", login);
+  document.getElementById("logout-btn").addEventListener("click", logout);
+
+  if (localStorage.getItem("admin") === "true") {
+    initAdmin();
+  }
+});
+
+/* =====================
+   INITIALIZE ADMIN PANEL
+===================== */
 function initAdmin() {
   document.getElementById("login").style.display = "none";
   document.getElementById("admin").style.display = "flex";
+
   loadToday();
   loadHistory();
   watchToday();
 }
 
-if (localStorage.getItem("admin") === "true") {
-  initAdmin();
-}
-
 /* =====================
-   TODAY
+   LOAD TODAY TABLE
 ===================== */
-const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD
-const employees = [
-  "Kiran Barthwal",
-  "Jeenat Khan",
-  "Rohin Dixit",
-  "Kamal Hassain",
-  "Sudarla",
-  "Jakir",
-  "Sam Lee"
-];
-
 async function loadToday() {
   const box = document.getElementById("today");
   box.innerHTML = `<h2>Today (${today})</h2>`;
@@ -81,12 +100,12 @@ async function loadToday() {
   html += "</tbody></table>";
   box.innerHTML += html;
 
-  // 오늘 출석 기록 초기 로딩
+  // 오늘 출석 초기값 로딩
   const snap = await getDocs(collection(db, "attendance", today, "records"));
   snap.forEach(docSnap => {
     const r = docSnap.data();
-    if (r.attendAt) document.getElementById(`attend-${docSnap.id}`).textContent = r.attendAt.toDate().toLocaleTimeString();
-    if (r.leaveAt) document.getElementById(`leave-${docSnap.id}`).textContent = r.leaveAt.toDate().toLocaleTimeString();
+    if (r.attendAt) document.getElementById(`attend-${docSnap.id}`)?.textContent = r.attendAt.toDate().toLocaleTimeString();
+    if (r.leaveAt) document.getElementById(`leave-${docSnap.id}`)?.textContent = r.leaveAt.toDate().toLocaleTimeString();
   });
 }
 
@@ -105,14 +124,13 @@ function watchToday() {
 }
 
 /* =====================
-   HISTORY
+   LOAD HISTORY
 ===================== */
 async function loadHistory() {
   const box = document.getElementById("history");
   box.innerHTML = "<h2>History</h2>";
 
   const snap = await getDocs(collection(db, "attendance"));
-
   if (snap.empty) {
     box.innerHTML += "<p>No history found.</p>";
     return;
@@ -121,27 +139,22 @@ async function loadHistory() {
   let html = "<ul>";
   snap.forEach(docSnap => {
     const dateId = docSnap.id;
-
-    // 날짜 형식 체크 (YYYY-MM-DD)
     if (!/^\d{4}-\d{2}-\d{2}$/.test(dateId)) return;
-
     html += `<li><button onclick="loadHistoryRecords('${dateId}')">📅 ${dateId}</button></li>`;
   });
   html += "</ul>";
-
   box.innerHTML += html;
   box.innerHTML += `<div id="history-records" style="margin-top:20px;"></div>`;
 }
 
 /* =====================
-   HISTORY RECORDS
+   LOAD HISTORY RECORDS
 ===================== */
 window.loadHistoryRecords = async (dateId) => {
   const container = document.getElementById("history-records");
   container.innerHTML = `<h3>Records for ${dateId}</h3>`;
 
   const snap = await getDocs(collection(db, "attendance", dateId, "records"));
-
   if (snap.empty) {
     container.innerHTML += "<p>No attendance records.</p>";
     return;
