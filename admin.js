@@ -1,5 +1,14 @@
 import { db, getTodayKey } from "./firebase.js";
-import { doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import {
+  doc,
+  getDoc,
+  collection,
+  getDocs,
+  query,
+  orderBy,
+  limit,
+  documentId,
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 console.log("🔥 admin.js loaded");
 
@@ -12,7 +21,7 @@ const EMPLOYEES = [
   "Kamal Hassain",
   "Sudarla",
   "Jakir",
-  "Sam Lee"
+  "Sam Lee",
 ];
 
 function formatTime(timeStr) {
@@ -24,7 +33,7 @@ function formatTime(timeStr) {
   if (isNaN(h) || isNaN(m)) return "-";
   const period = h < 12 ? "AM" : "PM";
   const hour12 = h % 12 === 0 ? 12 : h % 12;
-  return `${period} ${hour12}:${m.toString().padStart(2,"0")}`;
+  return `${period} ${hour12}:${m.toString().padStart(2, "0")}`;
 }
 
 const pinBtn = document.getElementById("pinBtn");
@@ -33,7 +42,9 @@ const pinError = document.getElementById("pinError");
 const pinSection = document.getElementById("pinSection");
 const adminSection = document.getElementById("adminSection");
 
-window.checkPin = async function() {
+window.checkPin = async function () {
+  pinError.textContent = "";
+
   if (pinInput.value === ADMIN_PIN) {
     pinSection.style.display = "none";
     adminSection.style.display = "block";
@@ -50,8 +61,7 @@ pinInput.addEventListener("keydown", (e) => {
 
 async function loadTodayAttendance() {
   const todayKey = getTodayKey();
-  document.getElementById("title").textContent =
-    `Today's Attendance (${todayKey})`;
+  document.getElementById("title").textContent = `Today's Attendance (${todayKey})`;
 
   const tbody = document.getElementById("attendanceTable");
   tbody.innerHTML = "";
@@ -60,13 +70,15 @@ async function loadTodayAttendance() {
     const ref = doc(db, "attendance", todayKey, "records", name);
     const snap = await getDoc(ref);
 
-    const attend = snap.exists() && snap.data().attendAt
-      ? formatTime(snap.data().attendAt.toDate().toISOString())
-      : "-";
+    const attend =
+      snap.exists() && snap.data().attendAt
+        ? formatTime(snap.data().attendAt.toDate().toISOString())
+        : "-";
 
-    const leave = snap.exists() && snap.data().leaveAt
-      ? formatTime(snap.data().leaveAt.toDate().toISOString())
-      : "-";
+    const leave =
+      snap.exists() && snap.data().leaveAt
+        ? formatTime(snap.data().leaveAt.toDate().toISOString())
+        : "-";
 
     tbody.innerHTML += `
       <tr>
@@ -87,7 +99,8 @@ toggleBtn.addEventListener("click", async () => {
   historySection.style.display = open ? "none" : "block";
   toggleBtn.textContent = open ? "View more ▼" : "Hide ▲";
 
-  if (!historyLoaded) {
+  // 처음 열 때만 불러오기
+  if (!historyLoaded && !open) {
     await loadHistory();
     historyLoaded = true;
   }
@@ -96,50 +109,84 @@ toggleBtn.addEventListener("click", async () => {
 async function loadHistory() {
   const todayKey = getTodayKey();
   const container = document.getElementById("historyContainer");
-  container.innerHTML = "";
+  container.innerHTML = "Loading...";
 
-  const snap = await getDocs(collection(db,"attendance"));
-  const dates = snap.docs
-    .map(d => d.id)
-    .filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d)) // YYYY-MM-DD 문서만
-    .filter(d => d !== todayKey)
-    .sort((a,b) => b.localeCompare(a));
+  try {
+    // ✅ 핵심: attendance 컬렉션 전체 getDocs() 대신
+    // 문서ID(YYYY-MM-DD) 기준 정렬/제한 쿼리로 가져오기
+    const q = query(
+      collection(db, "attendance"),
+      orderBy(documentId(), "desc"),
+      limit(30)
+    );
 
-  for (const date of dates) {
-    let html = `
-      <div class="history-day">
-        <h4>${date}</h4>
-        <table>
-          <tr>
-            <th>Name</th>
-            <th>Attend</th>
-            <th>Leave</th>
-          </tr>
-    `;
+    const snap = await getDocs(q);
 
-    for (const name of EMPLOYEES) {
-      const ref = doc(db,"attendance",date,"records",name);
-      const snap = await getDoc(ref);
+    const dates = snap.docs
+      .map((d) => d.id)
+      .filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d))
+      .filter((d) => d !== todayKey);
 
-      const attend = snap.exists() && snap.data().attendAt
-        ? formatTime(snap.data().attendAt.toDate().toISOString())
-        : "-";
-
-      const leave = snap.exists() && snap.data().leaveAt
-        ? formatTime(snap.data().leaveAt.toDate().toISOString())
-        : "-";
-
-      html += `
-        <tr>
-          <td>${name}</td>
-          <td>${attend}</td>
-          <td>${leave}</td>
-        </tr>
-      `;
+    if (dates.length === 0) {
+      container.innerHTML = "<p>No history yet.</p>";
+      return;
     }
 
-    html += "</table></div>";
-    container.innerHTML += html;
+    container.innerHTML = "";
+
+    for (const date of dates) {
+      let html = `
+        <div class="history-day">
+          <h4>${date}</h4>
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Attend</th>
+                <th>Leave</th>
+              </tr>
+            </thead>
+            <tbody>
+      `;
+
+      for (const name of EMPLOYEES) {
+        const ref = doc(db, "attendance", date, "records", name);
+        const d = await getDoc(ref);
+
+        const attend =
+          d.exists() && d.data().attendAt
+            ? formatTime(d.data().attendAt.toDate().toISOString())
+            : "-";
+
+        const leave =
+          d.exists() && d.data().leaveAt
+            ? formatTime(d.data().leaveAt.toDate().toISOString())
+            : "-";
+
+        html += `
+          <tr>
+            <td>${name}</td>
+            <td>${attend}</td>
+            <td>${leave}</td>
+          </tr>
+        `;
+      }
+
+      html += `
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      container.innerHTML += html;
+    }
+  } catch (e) {
+    console.error("History load failed:", e);
+    container.innerHTML = `
+      <p style="color:red;">
+        History load failed: ${e.message}
+      </p>
+    `;
   }
 }
 
