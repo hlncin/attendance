@@ -13,23 +13,26 @@
 <body>
 
   <!-- PIN 입력 -->
-  <div id="pin-section">
+  <div id="pinSection">
     <h2>Admin Access</h2>
-    <input type="password" id="pin-input" placeholder="Enter PIN" />
-    <button id="pin-btn">Enter</button>
-    <p id="pin-error" style="color:red;"></p>
+    <input type="password" id="pinInput" placeholder="Enter PIN" />
+    <button id="pinBtn" type="button">Enter</button>
+    <p id="pinError" style="color:red;"></p>
   </div>
 
   <!-- 관리자 화면 -->
-  <div id="admin-section" style="display:none;">
-    <h2>Today Attendance</h2>
-    <div id="today-list"></div>
+  <div id="adminSection" style="display:none;">
+    <h2 id="title"></h2>
 
-    <button id="toggle-history">View more ▼</button>
+    <table>
+      <tbody id="attendanceTable"></tbody>
+    </table>
 
-    <div id="history-section" style="display:none;">
-      <h2>History</h2>
-      <div id="history-list"></div>
+    <button id="toggleHistory" type="button">View more ▼</button>
+
+    <div id="historySection" style="display:none;">
+      <h3>History</h3>
+      <div id="historyContainer"></div>
     </div>
   </div>
 
