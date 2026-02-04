@@ -3,39 +3,116 @@
 <head>
   <meta charset="UTF-8" />
   <title>Attendance Admin</title>
+
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    .row { display: flex; gap: 20px; padding: 4px 0; }
-    .history-day { margin-top: 16px; padding-top: 8px; border-top: 1px solid #ccc; }
-    button { margin-top: 12px; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f6f7f9;
+      padding: 30px;
+    }
+
+    h2 {
+      margin-bottom: 10px;
+    }
+
+    /* 카드 느낌 */
+    .card {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      margin-bottom: 20px;
+    }
+
+    input, button {
+      padding: 8px 12px;
+      font-size: 14px;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    /* 테이블 (엑셀 친화적) */
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px 10px;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    th {
+      background: #f0f0f0;
+    }
+
+    .status-yes {
+      color: green;
+      font-weight: bold;
+    }
+
+    .status-no {
+      color: #999;
+    }
+
+    #toggle-history {
+      margin-top: 10px;
+    }
   </style>
 </head>
+
 <body>
 
   <!-- PIN 입력 -->
-  <div id="pinSection">
+  <div id="pin-section" class="card">
     <h2>Admin Access</h2>
-    <input type="password" id="pinInput" placeholder="Enter PIN" />
-    <button id="pinBtn" type="button">Enter</button>
-    <p id="pinError" style="color:red;"></p>
+    <input type="password" id="pin-input" placeholder="Enter PIN" />
+    <button id="pin-btn">Enter</button>
+    <p id="pin-error" style="color:red;"></p>
   </div>
 
   <!-- 관리자 화면 -->
-  <div id="adminSection" style="display:none;">
-    <h2 id="title"></h2>
+  <div id="admin-section" class="card" style="display:none;">
+    <h2>Today Attendance</h2>
 
-    <table>
-      <tbody id="attendanceTable"></tbody>
+    <table id="today-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Check-in Time</th>
+        </tr>
+      </thead>
+      <tbody id="today-list">
+        <!-- JS로 채워짐 -->
+      </tbody>
     </table>
 
-    <button id="toggleHistory" type="button">View more ▼</button>
+    <button id="toggle-history">View more ▼</button>
 
-    <div id="historySection" style="display:none;">
-      <h3>History</h3>
-      <div id="historyContainer"></div>
+    <div id="history-section" style="display:none;">
+      <h2>History</h2>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Name</th>
+            <th>Check-in Time</th>
+          </tr>
+        </thead>
+        <tbody id="history-list">
+          <!-- JS로 채워짐 -->
+        </tbody>
+      </table>
     </div>
   </div>
 
+  <!-- ⚠️ module 유지 -->
   <script type="module" src="admin.js"></script>
 </body>
 </html>

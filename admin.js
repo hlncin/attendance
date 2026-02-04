@@ -38,9 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const adminSection = document.getElementById("adminSection");
 
   pinBtn.addEventListener("click", () => {
-    const input = pinInput.value;
-
-    if (input === ADMIN_PIN) {
+    if (pinInput.value === ADMIN_PIN) {
       pinSection.style.display = "none";
       adminSection.style.display = "block";
       loadTodayAttendance();
@@ -50,33 +48,31 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   /*****************
-   * 오늘 출석 로드
+   * 오늘 출석
    *****************/
   async function loadTodayAttendance() {
     const todayKey = getTodayKey();
 
-    const title = document.getElementById("title");
-    title.textContent = `Today's Attendance (${todayKey})`;
+    document.getElementById("title").textContent =
+      `Today's Attendance (${todayKey})`;
 
     const table = document.getElementById("attendanceTable");
     table.innerHTML = "";
 
     for (const name of EMPLOYEES) {
-      const docRef = doc(db, "attendance", todayKey, "users", name);
-      const snapshot = await getDoc(docRef);
+      const ref = doc(db, "attendance", todayKey, "users", name);
+      const snap = await getDoc(ref);
 
-      const attend =
-        snapshot.exists() && snapshot.data().attend
-          ? snapshot.data().attend
-          : "-";
-      const leave =
-        snapshot.exists() && snapshot.data().leave
-          ? snapshot.data().leave
-          : "-";
+      const attend = snap.exists() && snap.data().attend ? snap.data().attend : "-";
+      const leave  = snap.exists() && snap.data().leave  ? snap.data().leave  : "-";
 
-      const tr = document.createElement("tr");
-      tr.innerHTML = `<td>${name}</td><td>${attend}</td><td>${leave}</td>`;
-      table.appendChild(tr);
+      table.innerHTML += `
+        <tr>
+          <td>${name}</td>
+          <td>${attend}</td>
+          <td>${leave}</td>
+        </tr>
+      `;
     }
   }
 
@@ -88,10 +84,9 @@ document.addEventListener("DOMContentLoaded", () => {
   let historyLoaded = false;
 
   toggleBtn.addEventListener("click", async () => {
-    const isOpen = historySection.style.display === "block";
-
-    historySection.style.display = isOpen ? "none" : "block";
-    toggleBtn.textContent = isOpen ? "View more ▼" : "Hide ▲";
+    const open = historySection.style.display === "block";
+    historySection.style.display = open ? "none" : "block";
+    toggleBtn.textContent = open ? "View more ▼" : "Hide ▲";
 
     if (!historyLoaded) {
       await loadHistory();
@@ -104,48 +99,47 @@ document.addEventListener("DOMContentLoaded", () => {
    *****************/
   async function loadHistory() {
     const todayKey = getTodayKey();
-    const historyContainer = document.getElementById("historyContainer");
-    historyContainer.innerHTML = "";
+    const container = document.getElementById("historyContainer");
+    container.innerHTML = "";
 
-    const attendanceRef = collection(db, "attendance");
-    const snapshot = await getDocs(attendanceRef);
+    const snap = await getDocs(collection(db, "attendance"));
 
-    const dates = snapshot.docs
-      .map(doc => doc.id)
-      .filter(date => date !== todayKey)
+    const dates = snap.docs
+      .map(d => d.id)
+      .filter(d => d !== todayKey)
       .sort((a, b) => b.localeCompare(a));
 
     for (const date of dates) {
-      const dayBlock = document.createElement("div");
-      dayBlock.className = "history-day";
-      dayBlock.innerHTML = `<h4>${date}</h4>`;
+      let html = `
+        <div class="history-day">
+          <h4>${date}</h4>
+          <table>
+            <tr>
+              <th>Name</th>
+              <th>Check-in</th>
+              <th>Check-out</th>
+            </tr>
+      `;
 
       for (const name of EMPLOYEES) {
-        const userRef = doc(db, "attendance", date, "users", name);
-        const userSnap = await getDoc(userRef);
+        const ref = doc(db, "attendance", date, "users", name);
+        const snap = await getDoc(ref);
 
-        const attend =
-          userSnap.exists() && userSnap.data().attend
-            ? userSnap.data().attend
-            : "-";
-        const leave =
-          userSnap.exists() && userSnap.data().leave
-            ? userSnap.data().leave
-            : "-";
+        const attend = snap.exists() && snap.data().attend ? snap.data().attend : "-";
+        const leave  = snap.exists() && snap.data().leave  ? snap.data().leave  : "-";
 
-        const row = document.createElement("div");
-        row.className = "row";
-        row.innerHTML = `
-          <span>${name}</span>
-          <span>${attend}</span>
-          <span>${leave}</span>
+        html += `
+          <tr>
+            <td>${name}</td>
+            <td>${attend}</td>
+            <td>${leave}</td>
+          </tr>
         `;
-        dayBlock.appendChild(row);
       }
 
-      historyContainer.appendChild(dayBlock);
+      html += "</table></div>";
+      container.innerHTML += html;
     }
   }
-
 });
 
