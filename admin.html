@@ -1,25 +1,39 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <title>Admin - Attendance</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <title>Attendance Admin</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    .row { display: flex; gap: 20px; padding: 4px 0; }
+    .history-day { margin-top: 16px; padding-top: 8px; border-top: 1px solid #ccc; }
+    button { margin-top: 12px; }
+  </style>
 </head>
 <body>
-  <h1 id="title">Today's Attendance</h1>
-  <table>
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Attend</th>
-        <th>Leave</th>
-      </tr>
-    </thead>
-    <tbody id="attendanceTable"></tbody>
-  </table>
-  
-  <script type="module" src="./admin.js"></script>
-  
+
+  <!-- PIN 입력 -->
+  <div id="pin-section">
+    <h2>Admin Access</h2>
+    <input type="password" id="pin-input" placeholder="Enter PIN" />
+    <button id="pin-btn">Enter</button>
+    <p id="pin-error" style="color:red;"></p>
+  </div>
+
+  <!-- 관리자 화면 -->
+  <div id="admin-section" style="display:none;">
+    <h2>Today Attendance</h2>
+    <div id="today-list"></div>
+
+    <button id="toggle-history">View more ▼</button>
+
+    <div id="history-section" style="display:none;">
+      <h2>History</h2>
+      <div id="history-list"></div>
+    </div>
+  </div>
+
+  <script src="admin.js"></script>
 </body>
 </html>
 
