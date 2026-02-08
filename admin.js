@@ -126,6 +126,8 @@ async function loadTodayAttendance() {
     `;
   }
 }
+console.log("✅ projectId =", db.app?.options?.projectId);
+
 
 /* ==============================
    📜 History 토글
