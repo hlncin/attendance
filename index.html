@@ -1,80 +1,96 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<title>Attendance at WiBo Corp</title>
-
-<script type="module" src="firebase.js"></script>
-<script type="module" src="script.js"></script>
-
-<style>
-body {
-  font-family: system-ui, -apple-system;
-  background: #f4f6f9;
-  height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.card {
-  background: white;
-  width: 360px;
-  padding: 30px;
-  border-radius: 16px;
-  box-shadow: 0 12px 30px rgba(0,0,0,.1);
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-h2 { text-align:center; margin:0; }
-
-select {
-  padding: 14px;
-  font-size: 16px;
-  border-radius: 10px;
-  border: 1px solid #d1d5db;
-}
-
-.buttons {
-  display:flex;
-  gap:12px;
-}
-
-button {
-  flex:1;
-  padding:14px;
-  border:none;
-  border-radius:10px;
-  font-size:16px;
-  font-weight:600;
-  cursor:pointer;
-  color:white;
-}
-
-.attend { background:#4f46e5; }
-.leave  { background:#10b981; }
-
-.attend:hover { background:#4338ca; }
-.leave:hover  { background:#059669; }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>WiBo Corp - Attendance</title>
+  <link rel="stylesheet" href="./style.css" />
 </head>
 
 <body>
-<div class="card">
-  <h2>Attendance at WiBo Corp</h2>
+  <div class="app">
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-top">
+        <button id="sidebarToggle" class="icon-btn" aria-label="Toggle sidebar">☰</button>
+        <div class="brand">
+          <div class="brand-title">WiBo Corp</div>
+          <div class="brand-sub">Attendance Tool</div>
+        </div>
+      </div>
 
-  <select id="employeeSelect">
-    <option value="">Select your name</option>
-  </select>
+      <nav class="nav">
+        <button id="navAttendance" class="nav-item is-active" type="button">
+          <span class="dot"></span><span class="nav-text">Attendance</span>
+        </button>
+        <button id="navHoliday" class="nav-item" type="button">
+          <span class="dot"></span><span class="nav-text">Holiday</span>
+        </button>
+      </nav>
 
-  <div class="buttons">
-    <button class="attend" id="attendBtn">Attend</button>
-    <button class="leave" id="leaveBtn">Leave</button>
+      <div class="sidebar-foot">
+        <small id="todayKeyBadge"></small>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main">
+      <header class="topbar">
+        <h1 id="pageTitle">Attendance</h1>
+      </header>
+
+      <!-- Attendance View -->
+      <section id="viewAttendance" class="view is-active">
+        <div class="card">
+          <h2 class="card-title">Check In / Out</h2>
+
+          <div class="form-row">
+            <label class="label" for="employeeSelect">Employee</label>
+            <select id="employeeSelect" class="select">
+              <option value="">Select your name</option>
+            </select>
+          </div>
+
+          <div class="buttons">
+            <button class="btn attend" id="attendBtn" type="button">Attend</button>
+            <button class="btn leave" id="leaveBtn" type="button">Leave</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Holiday View -->
+      <section id="viewHoliday" class="view">
+        <div class="card">
+          <h2 class="card-title">Holiday Calendar</h2>
+
+          <div class="holiday-controls">
+            <label class="label">
+              Year
+              <input id="hybYear" class="input" type="number" min="1900" max="2100" />
+            </label>
+
+            <div class="ctrl-btns">
+              <button id="hybPrev" class="btn ghost" type="button">◀</button>
+              <button id="hybNext" class="btn ghost" type="button">▶</button>
+              <button id="hybThisYear" class="btn primary" type="button">This Year</button>
+            </div>
+          </div>
+
+          <div class="holiday-layout">
+            <aside class="holiday-list-panel">
+              <h3 class="h3">Holidays</h3>
+              <div id="holidayList" class="holiday-list"></div>
+            </aside>
+
+            <div class="holiday-calendar">
+              <div id="hybYearGrid" class="year-grid"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
   </div>
-</div>
+
+  <script type="module" src="./script.js"></script>
 </body>
 </html>
-
-

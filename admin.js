@@ -4,6 +4,15 @@ import {
   getDoc,
   collection,
   getDocs,
+
+  // Holiday manager
+  addDoc,
+  deleteDoc,
+  onSnapshot,
+  query,
+  where,
+  orderBy,
+  serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 console.log("🔥 admin.js loaded (IST production)");
@@ -71,6 +80,7 @@ window.checkPin = async function () {
     pinSection.style.display = "none";
     adminSection.style.display = "block";
     await loadTodayAttendance();
+    initHolidayAdmin(); // ✅ Holiday 관리자 기능 초기화
   } else {
     pinError.textContent = "PIN이 올바르지 않습니다.";
   }
@@ -87,8 +97,7 @@ pinInput.addEventListener("keydown", (e) => {
 
 async function loadTodayAttendance() {
   const todayKey = getTodayKeyIST();
-  document.getElementById("title").textContent =
-    `Today's Attendance - ${todayKey}`;
+  document.getElementById("title").textContent = `Today's Attendance - ${todayKey}`;
 
   const tbody = document.getElementById("attendanceTable");
   tbody.innerHTML = "";
@@ -110,9 +119,9 @@ async function loadTodayAttendance() {
 
       tbody.innerHTML += `
         <tr>
-          <td>${name}</td>
-          <td>${attend}</td>
-          <td>${leave}</td>
+          <td>${escapeHtml(name)}</td>
+          <td>${escapeHtml(attend)}</td>
+          <td>${escapeHtml(leave)}</td>
         </tr>
       `;
     }
@@ -127,8 +136,6 @@ async function loadTodayAttendance() {
     `;
   }
 }
-console.log("✅ projectId =", db.app?.options?.projectId);
-
 
 /* ==============================
    📜 History 토글
@@ -151,30 +158,16 @@ toggleBtn.addEventListener("click", async () => {
 
 /* ==============================
    📜 History
-   ✅ 변경: IST "오늘"도 History에 포함 (필터 제거)
 ================================ */
 
 async function loadHistory() {
-  
   const todayKey = getTodayKeyIST();
   const container = document.getElementById("historyContainer");
-  container.innerHTML = "Loading...";
+  container.innerHTML = "Loading.";
 
   try {
     const snap = await getDocs(collection(db, "attendance"));
-    
-    console.log("📌 attendance doc count =", snap.size);
-    console.log("📌 attendance doc ids =", snap.docs.map(d => d.id));
-    console.log("📌 todayKeyIST =", todayKey);
 
-    const testRef = doc(db, "attendance", "2026-02-07");
-    const testSnap = await getDoc(testRef);
-    console.log("🧪 getDoc(attendance/2026-02-07) exists =", testSnap.exists());
-    console.log("🧪 getDoc data =", testSnap.exists() ? testSnap.data() : null);
-
-
-    // ✅ 날짜 문서 ID만 추출 (YYYY-MM-DD)
-    // ✅ 변경: 오늘(todayKey)도 제외하지 않음
     const dates = snap.docs
       .map((d) => d.id)
       .filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d))
@@ -193,7 +186,7 @@ async function loadHistory() {
 
       let html = `
         <div class="history-day">
-          <h4>${date}${isToday ? " (Today)" : ""}</h4>
+          <h4>${escapeHtml(date)}${isToday ? " (Today)" : ""}</h4>
           <table>
             <thead>
               <tr>
@@ -221,9 +214,9 @@ async function loadHistory() {
 
         html += `
           <tr>
-            <td>${name}</td>
-            <td>${attend}</td>
-            <td>${leave}</td>
+            <td>${escapeHtml(name)}</td>
+            <td>${escapeHtml(attend)}</td>
+            <td>${escapeHtml(leave)}</td>
           </tr>
         `;
       }
@@ -238,9 +231,134 @@ async function loadHistory() {
     }
   } catch (e) {
     console.error(e);
-    container.innerHTML = `
-      <p style="color:red;">Failed to load history</p>
-    `;
+    container.innerHTML = `<p style="color:red;">Failed to load history</p>`;
   }
 }
 
+/* ==============================
+   🎉 Holiday Manager
+   저장 형식:
+   holidays 컬렉션
+   { name: string, date: "YYYY-MM-DD", year: number, createdAt: serverTimestamp() }
+================================ */
+
+const holidaySection = document.getElementById("holidaySection");
+const holidayYearEl = document.getElementById("holidayYear");
+const holidayRefreshBtn = document.getElementById("holidayRefresh");
+const holidayNameEl = document.getElementById("holidayName");
+const holidayDateEl = document.getElementById("holidayDate");
+const addHolidayBtn = document.getElementById("addHolidayBtn");
+const holidayTbody = document.getElementById("holidayTableBody");
+
+let holidayUnsub = null;
+let holidayInited = false;
+
+function initHolidayAdmin() {
+  if (holidayInited) return;
+  holidayInited = true;
+
+  // 기본 year = 올해
+  const nowYear = new Date().getFullYear();
+  holidayYearEl.value = String(nowYear);
+
+  // Add
+  addHolidayBtn.addEventListener("click", async () => {
+    const name = (holidayNameEl.value || "").trim();
+    const dateStr = (holidayDateEl.value || "").trim(); // YYYY-MM-DD
+
+    if (!name) return;
+    if (!dateStr) return;
+
+    const year = Number(dateStr.slice(0, 4));
+    if (!Number.isFinite(year)) return;
+
+    try {
+      await addDoc(collection(db, "holidays"), {
+        name,
+        date: dateStr,
+        year,
+        createdAt: serverTimestamp(),
+      });
+
+      holidayNameEl.value = "";
+      // date는 유지해도 됨
+    } catch (e) {
+      console.error(e);
+    }
+  });
+
+  // Refresh
+  holidayRefreshBtn.addEventListener("click", () => {
+    const y = Number(holidayYearEl.value);
+    subscribeHolidays(Number.isFinite(y) ? y : new Date().getFullYear());
+  });
+
+  // year input Enter
+  holidayYearEl.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") holidayRefreshBtn.click();
+  });
+
+  // 처음 구독
+  subscribeHolidays(nowYear);
+
+  // 섹션이 숨겨져 있어도 구독은 계속 유지(원하면 nav 눌렀을 때만 subscribe 하도록 바꿀 수도 있음)
+  holidaySection.style.display = holidaySection.style.display || "none";
+}
+
+function subscribeHolidays(year) {
+  if (holidayUnsub) holidayUnsub();
+
+  const q = query(
+    collection(db, "holidays"),
+    where("year", "==", Number(year)),
+    orderBy("date", "asc")
+  );
+
+  holidayUnsub = onSnapshot(
+    q,
+    (snap) => {
+      holidayTbody.innerHTML = "";
+
+      if (snap.empty) return;
+
+      snap.forEach((docSnap) => {
+        const d = docSnap.data();
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+          <td>${escapeHtml(d.date || "-")}</td>
+          <td>${escapeHtml(d.name || "-")}</td>
+          <td><button class="btn secondary" data-del="${docSnap.id}">Delete</button></td>
+        `;
+
+        tr.querySelector("button").addEventListener("click", async () => {
+          try {
+            await deleteDoc(doc(db, "holidays", docSnap.id));
+          } catch (e) {
+            console.error(e);
+          }
+        });
+
+        holidayTbody.appendChild(tr);
+      });
+    },
+    (err) => {
+      console.error(err);
+      holidayTbody.innerHTML = `
+        <tr><td colspan="3" style="color:red;">Failed to load</td></tr>
+      `;
+    }
+  );
+}
+
+/* ==============================
+   Utils
+================================ */
+function escapeHtml(str) {
+  return String(str)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}

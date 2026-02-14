@@ -94,19 +94,8 @@
     .nav button:active { transform: translateY(1px); }
     .nav button:focus { outline: none; box-shadow: var(--focus); }
 
-    .sidebar .hint {
-      margin-top: auto;
-      font-size: 12px;
-      color: rgba(229,231,235,0.65);
-      line-height: 1.4;
-      border-top: 1px solid rgba(255,255,255,0.08);
-      padding-top: 14px;
-    }
-
     /* Main */
-    .main {
-      padding: 28px 28px 40px;
-    }
+    .main { padding: 28px 28px 40px; }
 
     .header {
       display: flex;
@@ -147,15 +136,21 @@
       margin-top: 10px;
     }
 
-    input[type="password"] {
+    input[type="password"],
+    input[type="text"],
+    input[type="date"],
+    input[type="number"]{
       border: 1px solid var(--line2);
       border-radius: 12px;
       padding: 10px 12px;
       font-size: 14px;
-      min-width: 220px;
       background: #fff;
     }
-    input[type="password"]:focus {
+
+    input[type="password"]:focus,
+    input[type="text"]:focus,
+    input[type="date"]:focus,
+    input[type="number"]:focus{
       outline: none;
       box-shadow: var(--focus);
       border-color: rgba(59,130,246,0.5);
@@ -170,6 +165,7 @@
       font-size: 14px;
       cursor: pointer;
       transition: transform 0.06s ease, opacity 0.2s ease;
+      white-space: nowrap;
     }
     .btn:hover { opacity: 0.92; }
     .btn:active { transform: translateY(1px); }
@@ -186,7 +182,7 @@
       font-size: 13px;
     }
 
-    /* Table (Excel friendly: keep true <table>) */
+    /* Table (Excel friendly) */
     .table-wrap {
       width: 100%;
       overflow: auto;
@@ -196,7 +192,7 @@
     }
 
     table {
-      border-collapse: collapse; /* Excel copy friendly */
+      border-collapse: collapse;
       width: 100%;
       min-width: 520px;
     }
@@ -232,15 +228,23 @@
       font-weight: 800;
     }
 
-    .history-day {
-      margin-top: 14px;
-    }
+    .history-day { margin-top: 14px; }
     .history-day h4 {
       margin: 18px 0 10px;
       font-size: 14px;
       font-weight: 800;
       color: #111827;
     }
+
+    /* Holiday manager layout */
+    .holiday-controls{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+      margin-bottom: 12px;
+    }
+    .holiday-controls .spacer { flex: 1; }
 
     /* Responsive */
     @media (max-width: 860px) {
@@ -269,11 +273,7 @@
       <div class="nav">
         <button id="navToday">📌 Today</button>
         <button id="navHistory">🗂️ History</button>
-      </div>
-
-      <div class="hint">
-        • 테이블은 복사해서 엑셀에 붙여넣기 쉬운 형태로 유지됩니다.<br />
-        • History가 안 보이면 권한/Rules 문제일 수 있어요.
+        <button id="navHoliday">🎉 Holiday</button>
       </div>
     </aside>
 
@@ -297,7 +297,8 @@
 
       <!-- 관리자 화면 -->
       <section id="adminSection" style="display:none;">
-        <div class="card">
+        <!-- Today -->
+        <div class="card" id="todayCard">
           <div class="header">
             <div>
               <h1 id="title">Today's Attendance</h1>
@@ -322,9 +323,43 @@
           </div>
         </div>
 
+        <!-- History -->
         <div id="historySection" class="card" style="display:none;">
           <h2 class="section-title">History</h2>
           <div id="historyContainer"></div>
+        </div>
+
+        <!-- Holiday Manager -->
+        <div id="holidaySection" class="card" style="display:none;">
+          <h2 class="section-title">Holiday</h2>
+
+          <div class="holiday-controls">
+            <label>
+              Year
+              <input id="holidayYear" type="number" min="1900" max="2100" />
+            </label>
+            <button class="btn secondary" id="holidayRefresh">Refresh</button>
+            <div class="spacer"></div>
+          </div>
+
+          <div class="pin-row" style="margin-top: 0;">
+            <input id="holidayName" type="text" placeholder="Name" />
+            <input id="holidayDate" type="date" />
+            <button class="btn" id="addHolidayBtn">Add</button>
+          </div>
+
+          <div class="table-wrap" style="margin-top: 12px;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Name</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="holidayTableBody"></tbody>
+            </table>
+          </div>
         </div>
       </section>
     </main>
@@ -332,32 +367,44 @@
 
   <script type="module" src="admin.js"></script>
 
-  <!-- Sidebar buttons (admin.js 수정 없이 연결) -->
   <script type="module">
     const navToday = document.getElementById("navToday");
     const navHistory = document.getElementById("navHistory");
+    const navHoliday = document.getElementById("navHoliday");
+
     const adminSection = document.getElementById("adminSection");
     const toggleHistory = document.getElementById("toggleHistory");
     const historySection = document.getElementById("historySection");
 
+    const todayCard = document.getElementById("todayCard");
+    const holidaySection = document.getElementById("holidaySection");
+
     navToday.addEventListener("click", () => {
+      if (adminSection.style.display === "none") return;
+      holidaySection.style.display = "none";
       window.scrollTo({ top: 0, behavior: "smooth" });
     });
 
     navHistory.addEventListener("click", () => {
-      // PIN 통과 후에만 동작
       if (adminSection.style.display === "none") return;
 
-      // history가 닫혀있으면 토글 버튼으로 열기
+      holidaySection.style.display = "none";
+
       const isOpen = historySection.style.display === "block";
       if (!isOpen) toggleHistory.click();
 
-      // 열리고 난 뒤 위치로 스크롤
       setTimeout(() => {
         historySection.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 80);
     });
+
+    navHoliday.addEventListener("click", () => {
+      if (adminSection.style.display === "none") return;
+
+      // history는 굳이 강제 닫지 않음 (원하면 닫아도 됨)
+      holidaySection.style.display = "block";
+      holidaySection.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
   </script>
 </body>
 </html>
-
