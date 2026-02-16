@@ -276,7 +276,7 @@ async function holidayRenderAll() {
   const monthNum = Number($hyMonth.value);
   if (!Number.isFinite(yearNum) || !Number.isFinite(monthNum)) return;
 
-  if ($holidayTitle) $holidayTitle.textContent = "Holidays";
+  if ($holidayTitle) $holidayTitle.textContent = "Company Holidays";
   if ($holidayListTitle) $holidayListTitle.textContent = `Holidays for ${yearNum}`;
 
   try {
