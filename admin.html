@@ -323,33 +323,7 @@
 
       <!-- 관리자 화면 -->
       <section id="adminSection" style="display:none;">
-
-        <!-- Today -->
-        <div class="card">
-          <div class="header">
-            <div>
-              <h1 id="title">Today's Attendance</h1>
-            </div>
-          </div>
-          <div class="table-wrap">
-            <table id="todayTable">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Attend</th>
-                  <th>Leave</th>
-                </tr>
-              </thead>
-              <tbody id="attendanceTable"></tbody>
-            </table>
-          </div>
-          <div class="actions">
-            <button class="btn secondary" id="toggleHistory">View more ▼</button>
-            <button class="btn export" id="exportTodayBtn">⬇ Excel (Today)</button>
-          </div>
-        </div>
-
-<!-- Employee Monthly -->
+        <!-- Employee Monthly -->
         <div id="employeeSection" class="card" style="display:none; margin-top:16px;">
           <h2 class="section-title">👤 Employee Monthly View</h2>
           <div class="emp-filters">
@@ -373,6 +347,31 @@
                 <tr><td colspan="3" style="color:var(--muted); text-align:center;">직원과 월을 선택 후 Search를 누르세요.</td></tr>
               </tbody>
             </table>
+          </div>
+        </div>
+
+        <!-- Today -->
+        <div class="card">
+          <div class="header">
+            <div>
+              <h1 id="title">Today's Attendance</h1>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table id="todayTable">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Attend</th>
+                  <th>Leave</th>
+                </tr>
+              </thead>
+              <tbody id="attendanceTable"></tbody>
+            </table>
+          </div>
+          <div class="actions">
+            <button class="btn secondary" id="toggleHistory">View more ▼</button>
+            <button class="btn export" id="exportTodayBtn">⬇ Excel (Today)</button>
           </div>
         </div>
 
