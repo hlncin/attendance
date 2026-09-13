@@ -12,16 +12,31 @@ import {
   getDocs,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-const employees = [
+const DEFAULT_EMPLOYEES = [
   "Kiran Barthwal",
   "Jeenat Khan",
   "Rohin Dixit",
   "Kamal Hassain",
-  "Sundarlal",
+  "Bhanu Pratap Singh",
   "Jakir Hossain",
   "Suvimal Saha",
   "Sam Lee",
 ];
+
+// 관리자 화면(admin.html)에서 추가/제거한 직원 목록(Firestore: config/employees)을 불러옴.
+// 아직 저장된 목록이 없으면 기본 목록을 사용.
+async function loadEmployeeList() {
+  try {
+    const ref = doc(db, "config", "employees");
+    const snap = await getDoc(ref);
+    if (snap.exists() && Array.isArray(snap.data().list) && snap.data().list.length > 0) {
+      return snap.data().list;
+    }
+  } catch (e) {
+    console.error("Failed to load employee list, using default", e);
+  }
+  return DEFAULT_EMPLOYEES;
+}
 
 /* ==============================
    🇮🇳 IST 날짜키 유틸 (UTC+5:30)
@@ -93,12 +108,15 @@ const attendBtn = document.getElementById("attendBtn");
 const leaveBtn = document.getElementById("leaveBtn");
 
 if (select) {
-  employees.forEach((name) => {
-    const opt = document.createElement("option");
-    opt.value = name;
-    opt.textContent = name;
-    select.appendChild(opt);
-  });
+  (async () => {
+    const employees = await loadEmployeeList();
+    employees.forEach((name) => {
+      const opt = document.createElement("option");
+      opt.value = name;
+      opt.textContent = name;
+      select.appendChild(opt);
+    });
+  })();
 }
 
 /* Attend */

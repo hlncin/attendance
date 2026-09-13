@@ -274,6 +274,7 @@
         <button id="navToday">📌 Today</button>
         <button id="navHistory">🗂️ History</button>
         <button id="navHoliday">🎉 Holiday</button>
+        <button id="navEmployees">👥 Employees</button>
       </div>
     </aside>
 
@@ -371,6 +372,28 @@
             </table>
           </div>
         </div>
+
+        <!-- Employee Manager -->
+        <div id="employeeSection" class="card" style="display:none;">
+          <h2 class="section-title">Employees</h2>
+
+          <div class="pin-row" style="margin-top: 0;">
+            <input id="newEmployeeInput" type="text" placeholder="새 직원 이름" />
+            <button class="btn" id="addEmployeeBtn">Add</button>
+          </div>
+
+          <div class="table-wrap" style="margin-top: 12px;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="employeeTableBody"></tbody>
+            </table>
+          </div>
+        </div>
       </section>
     </main>
   </div>
@@ -382,6 +405,7 @@
     const navToday = document.getElementById("navToday");
     const navHistory = document.getElementById("navHistory");
     const navHoliday = document.getElementById("navHoliday");
+    const navEmployees = document.getElementById("navEmployees");
 
     const adminSection = document.getElementById("adminSection");
     const toggleHistory = document.getElementById("toggleHistory");
@@ -389,10 +413,12 @@
 
     const todayCard = document.getElementById("todayCard");
     const holidaySection = document.getElementById("holidaySection");
+    const employeeSection = document.getElementById("employeeSection");
 
     navToday.addEventListener("click", () => {
       if (adminSection.style.display === "none") return;
       holidaySection.style.display = "none";
+      employeeSection.style.display = "none";
       window.scrollTo({ top: 0, behavior: "smooth" });
     });
 
@@ -400,6 +426,7 @@
       if (adminSection.style.display === "none") return;
 
       holidaySection.style.display = "none";
+      employeeSection.style.display = "none";
 
       const isOpen = historySection.style.display === "block";
       if (!isOpen) toggleHistory.click();
@@ -412,9 +439,21 @@
     navHoliday.addEventListener("click", () => {
       if (adminSection.style.display === "none") return;
 
+      employeeSection.style.display = "none";
       // history는 굳이 강제 닫지 않음 (원하면 닫아도 됨)
       holidaySection.style.display = "block";
       holidaySection.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+
+    navEmployees.addEventListener("click", () => {
+      if (adminSection.style.display === "none") return;
+
+      holidaySection.style.display = "none";
+      employeeSection.style.display = "block";
+      if (typeof window.renderEmployeeSettings === "function") {
+        window.renderEmployeeSettings();
+      }
+      employeeSection.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   </script>
 </body>

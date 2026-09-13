@@ -2,6 +2,7 @@ import { db } from "./firebase.js";
 import {
   doc,
   getDoc,
+  setDoc,
   collection,
   getDocs,
 
@@ -19,12 +20,12 @@ console.log("🔥 admin.js loaded (IST production)");
 
 const ADMIN_PIN = "0317";
 
-const EMPLOYEES = [
+let EMPLOYEES = [
   "Kiran Barthwal",
   "Jeenat Khan",
   "Rohin Dixit",
   "Kamal Hassain",
-  "Sundarlal",
+  "Bhanu Pratap Singh",
   "Jakir Hossain",
   "Suvimal Saha",
   "Sam Lee",
@@ -79,12 +80,37 @@ window.checkPin = async function () {
   if (pinInput.value === ADMIN_PIN) {
     pinSection.style.display = "none";
     adminSection.style.display = "block";
+    await loadEmployeeList();
     await loadTodayAttendance();
     initHolidayAdmin(); // ✅ Holiday 관리자 기능 초기화
   } else {
     pinError.textContent = "PIN이 올바르지 않습니다.";
   }
 };
+
+/* ==============================
+   👥 직원 목록 (Firestore: config/employees)
+================================ */
+
+const EMPLOYEES_DOC_REF = doc(db, "config", "employees");
+
+// Firestore에 저장된 직원 목록을 불러옴. 없으면 기본 목록으로 최초 생성.
+async function loadEmployeeList() {
+  try {
+    const snap = await getDoc(EMPLOYEES_DOC_REF);
+    if (snap.exists() && Array.isArray(snap.data().list) && snap.data().list.length > 0) {
+      EMPLOYEES = snap.data().list;
+    } else {
+      await setDoc(EMPLOYEES_DOC_REF, { list: EMPLOYEES }, { merge: true });
+    }
+  } catch (e) {
+    console.error("Failed to load employee list, using default", e);
+  }
+}
+
+async function saveEmployeeList() {
+  await setDoc(EMPLOYEES_DOC_REF, { list: EMPLOYEES }, { merge: true });
+}
 
 pinBtn.addEventListener("click", checkPin);
 pinInput.addEventListener("keydown", (e) => {
@@ -525,6 +551,92 @@ function subscribeHolidays(year) {
     }
   );
 }
+
+/* ==============================
+   👥 Employee Manager
+================================ */
+
+const employeeSection = document.getElementById("employeeSection");
+const newEmployeeInput = document.getElementById("newEmployeeInput");
+const addEmployeeBtn = document.getElementById("addEmployeeBtn");
+const employeeTbody = document.getElementById("employeeTableBody");
+
+function renderEmployeeSettings() {
+  if (!employeeTbody) return;
+
+  if (EMPLOYEES.length === 0) {
+    employeeTbody.innerHTML = `<tr><td colspan="2">등록된 직원이 없습니다.</td></tr>`;
+    return;
+  }
+
+  employeeTbody.innerHTML = EMPLOYEES.map(
+    (name) => `
+      <tr>
+        <td>${escapeHtml(name)}</td>
+        <td><button class="btn secondary" data-del-employee="${escapeHtml(name)}">Delete</button></td>
+      </tr>
+    `
+  ).join("");
+}
+window.renderEmployeeSettings = renderEmployeeSettings;
+
+async function addEmployee() {
+  const name = (newEmployeeInput?.value || "").trim();
+  if (!name) {
+    alert("직원 이름을 입력해 주세요.");
+    return;
+  }
+  if (EMPLOYEES.includes(name)) {
+    alert("이미 등록된 이름입니다.");
+    return;
+  }
+
+  const previous = EMPLOYEES;
+  if (addEmployeeBtn) addEmployeeBtn.disabled = true;
+  try {
+    EMPLOYEES = [...EMPLOYEES, name];
+    await saveEmployeeList();
+    newEmployeeInput.value = "";
+    renderEmployeeSettings();
+    await loadTodayAttendance();
+  } catch (e) {
+    console.error(e);
+    EMPLOYEES = previous;
+    alert("직원 추가 중 오류가 발생했습니다.");
+  } finally {
+    if (addEmployeeBtn) addEmployeeBtn.disabled = false;
+  }
+}
+
+async function removeEmployee(name) {
+  const ok = confirm(
+    `"${name}" 직원을 목록에서 제거하시겠습니까?\n체크인 화면과 오늘 출석표에서 더 이상 표시되지 않습니다.\n(과거에 기록된 출석 데이터는 삭제되지 않습니다.)`
+  );
+  if (!ok) return;
+
+  const previous = EMPLOYEES;
+  EMPLOYEES = EMPLOYEES.filter((n) => n !== name);
+  try {
+    await saveEmployeeList();
+    renderEmployeeSettings();
+    await loadTodayAttendance();
+  } catch (e) {
+    console.error(e);
+    EMPLOYEES = previous;
+    alert("직원 삭제 중 오류가 발생했습니다.");
+  }
+}
+
+addEmployeeBtn?.addEventListener("click", addEmployee);
+newEmployeeInput?.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") addEmployee();
+});
+
+employeeTbody?.addEventListener("click", (e) => {
+  const btn = e.target.closest("button[data-del-employee]");
+  if (!btn) return;
+  removeEmployee(btn.dataset.delEmployee);
+});
 
 /* ==============================
    Utils
